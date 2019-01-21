@@ -31,65 +31,63 @@ class App extends Component {
     };
   }
 
-  searchList = searchText => {
-    if (this.state.searchText.length > 0) {
-      const shownArr = this.state.list.filter(item => {
-        if (
-          JSON.stringify(item)
-            .toLowerCase()
-            .includes(searchText.toLowerCase())
-        ) {
-          return true;
-        }
-      });
-      this.setState({
-        shownList: shownArr
-      });
-    } else {
-      this.setState({
-        shownList: this.state.list
-      });
-    }
+  componentDidMount = () => {
+    const storedList = JSON.parse(localStorage.getItem('list'));
+    console.log(storedList);
+    console.log(this.state.list);
+    this.setState({ shownList: storedList });
   };
 
+  componentDidUpdate = () => {
+    localStorage.setItem('list', JSON.stringify(this.state.shownList));
+    console.log('updated');
+  };
+
+  // filtering original data, returning matched data
+  handleSearch = e => {
+    const match = this.state.list.filter(item => {
+      return item.task.includes(e.target.value);
+    });
+    this.setState({
+      shownList: match
+    });
+  };
+
+  // works if list is not filtered
   clearCompleted = () => {
     this.setState(previousState => {
-      const clearedList = previousState.list.filter(
+      const clearedList = previousState.shownList.filter(
         toDoItem => !toDoItem.completed
       );
       return {
-        list: clearedList
+        shownList: clearedList
       };
     });
   };
 
   toggleCompleted = task => {
     this.setState(previousState => {
-      const updatedList = previousState.list.map(toDoItem => {
+      const updatedList = previousState.shownList.map(toDoItem => {
         if (toDoItem.task === task) {
           toDoItem.completed = !toDoItem.completed;
         }
         return toDoItem;
       });
       return {
-        list: updatedList
+        shownList: updatedList
       };
     });
   };
 
   handleChanges = event => {
     this.setState({ [event.target.name]: event.target.value });
-    // add conditional, if input value is 0, display state.list
-    if (this.state.searchText.length > 0) {
-      this.searchList(event.target.value);
-    }
   };
 
   submitForm = event => {
     event.preventDefault();
     this.setState({
-      list: [
-        ...this.state.list,
+      shownList: [
+        ...this.state.shownList,
         { task: this.state.addingTask, id: Date.now(), completed: false }
       ],
       addingTask: ''
@@ -100,15 +98,16 @@ class App extends Component {
     return (
       <div className="container">
         <h1>To Do App</h1>
-        {/* <SearchComponent handleChanges={this.handleChanges} /> */}
+
         <ToDoList
-          list={this.state.list}
+          list={this.state.shownList}
           handleChanges={this.handleChanges}
           submitForm={this.submitForm}
           addingTask={this.state.addingTask}
           toggleCompleted={this.toggleCompleted}
           clearCompleted={this.clearCompleted}
         />
+        {/* <SearchComponent handleSearch={this.handleSearch} /> */}
       </div>
     );
   }
